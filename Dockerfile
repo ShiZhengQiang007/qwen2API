@@ -15,13 +15,13 @@ RUN npm run build
 FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-bookworm AS backend-builder
 WORKDIR /src
 COPY backend/go.mod backend/go.sum ./backend/
-RUN --mount=type=cache,target=/go/pkg/mod \
+RUN --mount=type=cache,id=gomod,target=/go/pkg/mod \
     cd backend && go mod download
 COPY backend/ ./backend/
 ARG TARGETOS
 ARG TARGETARCH
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=cache,id=gomod,target=/go/pkg/mod \
+    --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
     cd backend && CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} \
     go build -trimpath -ldflags="-s -w" -o /out/qwen2api .
 
